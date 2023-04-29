@@ -53,3 +53,12 @@ const useUserStore = defineStore('user', {
   },
 })
 ```
+
+
+
+通过 `localStorage.setItem` 更新状态
+
+```ts
+localStorage.setItem("__TOKEN__", 2)
+```
+

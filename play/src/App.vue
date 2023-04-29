@@ -4,20 +4,10 @@ import { defineStore } from 'pinia'
 
 const useUserStore = defineStore('user', {
   state: () => ({
-    token: '1',
+    token: 1,
     userInfo: { name: 'xxx' },
   }),
-  actions: {
-    setToken(token: string) {
-      this.token = token
-    },
-    setUserInfo(userInfo: any) {
-      this.userInfo = userInfo
-    },
-  },
   storage: {
-    enabled: true,
-    storage: sessionStorage,
     strategies: [
       {
         key: '__TOKEN__',
@@ -32,44 +22,19 @@ const useUserStore = defineStore('user', {
   },
 })
 
-const useCommonStore = defineStore('common', {
-  state: () => ({
-    msg: 'hello',
-  }),
-  storage: {
-    enabled: false,
-    storage: localStorage,
-    strategies: [
-      {
-        key: '__MSG__',
-        paths: 'msg',
-      },
-    ],
-  },
-})
-
 const userStore = useUserStore()
-const { token, userInfo } = toRefs(userStore)
+const { token } = toRefs(userStore)
 
-const commonStore = useCommonStore()
-const { msg } = toRefs(commonStore)
-
-// userStore.setToken('2')
-// userStore.setToken('3')
-// userStore.setUserInfo({ name: 'yyy' })
-// userInfo.value.name = 'yyy'
 const handleClick = () => {
-  // userStore.setUserInfo({ name: 'bbb' })
-  userInfo.value.name = 'aaa'
+  localStorage.setItem('__TOKEN__', JSON.stringify(++token.value))
 }
 </script>
 
 <template>
   <div>{{ token }}</div>
-  <div @click="handleClick">
-    {{ userInfo }}
-  </div>
-  <div>{{ msg }}</div>
+  <button @click="handleClick">
+    点击通过 localStorage.setItem 更新状态
+  </button>
 </template>
 
 <style lang="less" scoped></style>

@@ -4,26 +4,26 @@ declare let localStorage: CustomStorage
 declare let sessionStorage: CustomStorage
 
 export interface CustomStorage extends Storage {
-  setItem(key: string, value: string, flag?: boolean): void
+  setItem(key: string, value: string, updata?: boolean): void
 }
 
 export interface StorageEvent extends Event {
   key?: string
   newValue?: string | null
   oldValue?: string | null
-  immediate?: boolean
   storage?: Storage
+  updata?: boolean
 }
 
 const initSetItem = (storage: CustomStorage) => {
-  storage.setItem = function (key: string, value: string, immediate?: boolean) {
+  storage.setItem = function (key: string, value: string, updata?: boolean) {
     if (isJson(value)) {
       Reflect.set(storage, key, value, storage)
       const event = new Event('setItem') as StorageEvent
       event.key = key
       event.newValue = value
-      event.oldValue = localStorage.getItem(key)
-      event.immediate = immediate
+      event.oldValue = null
+      event.updata = updata
       event.storage = storage
       dispatchEvent(event)
     }
@@ -75,6 +75,7 @@ interface EventMap {
   setItem: StorageEvent
   getItem: StorageEvent
   removeItem: StorageEvent
+  storage: StorageEvent
 }
 
 export const stroageEventListener = (type: Key, listener: Listener) => {

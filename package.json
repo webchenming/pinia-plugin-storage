@@ -1,6 +1,16 @@
 {
   "name": "pinia-plugin-storage",
   "version": "0.0.1",
+  "description": "Pinia 持久化存储插件",
+  "keywords": [
+    "pinia",
+    "plugin",
+    "vue"
+  ],
+  "repository": {
+    "type": "gitee",
+    "url": "https://gitee.com/webchenming/pinia-plugin-storage"
+  },
   "author": "chenming",
   "license": "MIT",
   "type": "module",
