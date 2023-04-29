@@ -16,6 +16,8 @@ const useUserStore = defineStore('user', {
     },
   },
   storage: {
+    enabled: true,
+    storage: sessionStorage,
     strategies: [
       {
         key: '__TOKEN__',
