@@ -70,18 +70,21 @@ export const updateStorage = (
   if (typeof strategy.paths === 'string') {
     const storageKey = strategy.paths
     const storageVal = store.$state[storageKey]
-    windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
+    storageVal
+      && windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
   }
   else if (Array.isArray(strategy.paths)) {
     const storageVal = strategy.paths.reduce((obj, key) => {
       obj[key] = store.$state[key]
       return obj
     }, {} as State)
-    windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
+    storageVal
+      && windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
   }
   else {
     const storageVal = store.$state
-    windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
+    storageVal
+      && windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
   }
 }
 
