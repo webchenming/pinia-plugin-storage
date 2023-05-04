@@ -4,7 +4,7 @@ import { defineStore } from 'pinia'
 
 const useUserStore = defineStore('user', {
   state: () => ({
-    token: 1,
+    token: undefined,
     userInfo: { name: 'xxx' },
   }),
   storage: {

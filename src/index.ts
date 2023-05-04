@@ -2,13 +2,6 @@ import type { PiniaPluginContext } from 'pinia'
 import type { CustomStorage, StorageEvent } from './utils'
 import { initStroage, stroageEventListener } from './utils'
 
-declare module 'pinia' {
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  export interface DefineStoreOptionsBase<S, Store> {
-    storage?: StorageOptions
-  }
-}
-
 type Store = PiniaPluginContext['store']
 
 type State = Store['$state']
@@ -35,6 +28,13 @@ export interface StorageOptions {
   enabled?: boolean
   storage?: CustomStorage
   strategies?: PiniaStrategy[]
+}
+
+declare module 'pinia' {
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  export interface DefineStoreOptionsBase<S, Store> {
+    storage?: StorageOptions
+  }
 }
 
 /**

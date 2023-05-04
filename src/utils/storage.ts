@@ -28,7 +28,9 @@ const initSetItem = (storage: CustomStorage) => {
       dispatchEvent(event)
     }
     else {
-      throw new TypeError(`${JSON.stringify(value)} is not valid JSON`)
+      console.error(
+        `key [${key}] value [${JSON.stringify(value)}] is not valid JSON`,
+      )
     }
   }
 }
