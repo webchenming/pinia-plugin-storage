@@ -16,7 +16,7 @@
     "useDefineForClassFields": true,
     "moduleResolution": "node",
     "lib": ["ESNext", "DOM"],
-    "types": ["node", "pinia-plugin-storage"],
+    "types": ["node"],
     "paths": {
       "@/*": ["src/*"]
     }

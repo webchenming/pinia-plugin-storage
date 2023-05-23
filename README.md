@@ -32,7 +32,7 @@ const useUserStore = defineStore("user", {
   storage: {
     // 配置是否启用，默认 true
     enabled: true,
-    // 配置存储方式，默认 sessionStorage
+    // 配置存储方式，默认 localStorage
     storage: localStorage,
     // 配置策略，默认存储全部
     strategies: [
@@ -58,15 +58,6 @@ const useUserStore = defineStore("user", {
 ```ts
 localStorage.setItem("TOKEN", 2)
 ```
-## TypeScript 支持
-
-```json
-{
-  "compilerOptions": {
-    "types": ["pinia-plugin-storage"]
-  }
-}
-```
 
 ## 方法
 
@@ -74,6 +65,7 @@ localStorage.setItem("TOKEN", 2)
 | --------- | -------- | -------- |
 | `setItem` | 设置状态 | >= 0.0.5 |
 | `getItem` | 获取状态 | >= 0.0.5 |
+| `removeItem` | 移除状态 | >= 0.0.5 |
 
 ```ts
 import { setItem, getItem } from 'pinia-plugin-storage'
@@ -88,5 +80,6 @@ console.log(userInfo)
 ```ts
 type setItem = <T>(key: string, value: T, storage = localStorage): void
 type getItem = <R>(key: string, storage = localStorage): R
+type removeItem = (key: string, storage = localStorage): void
 ```
 

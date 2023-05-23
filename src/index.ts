@@ -1,6 +1,7 @@
 import type { PiniaPluginContext } from 'pinia'
-import type { CustomStorage, StorageEvent } from './utils'
+import { has, isArray, isString } from 'lodash-es'
 import { initStroage, stroageEventListener } from './utils'
+import type { CustomStorage, StorageEvent } from './utils'
 
 type Store = PiniaPluginContext['store']
 
@@ -46,11 +47,26 @@ declare module 'pinia' {
 export const updateStore = (
   strategy: PiniaStrategy,
   store: Store,
-  value: string,
+  value: string | null | undefined,
+  remove = false,
 ) => {
-  if (typeof strategy.paths === 'string')
-    store[strategy.paths] = JSON.parse(value)
-  else if (Array.isArray(strategy.paths)) store.$patch(JSON.parse(value))
+  if (isString(strategy.paths)) {
+    store[strategy.paths] = value ? JSON.parse(value) : value
+  }
+  else if (remove) {
+    if (isArray(strategy.paths)) {
+      strategy.paths.forEach(
+        (path) => (store[path] = value ? JSON.parse(value) : value),
+      )
+    }
+    else if (!has(strategy, 'paths')) {
+      const stateKeys = Object.keys(store.$state)
+      stateKeys.forEach((stateKey) => (store.$state[stateKey] = undefined))
+    }
+  }
+  else {
+    store.$patch(value ? JSON.parse(value) : value)
+  }
 }
 
 /**
@@ -67,24 +83,24 @@ export const updateStorage = (
   const windowStorage = strategy.storage || storage
   const storeKey = strategy.key || store.$id
 
-  if (typeof strategy.paths === 'string') {
+  if (isString(strategy.paths)) {
     const storageKey = strategy.paths
     const storageVal = store.$state[storageKey]
-    storageVal
-      && windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
+    if (![undefined].includes(storageVal))
+      windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
   }
-  else if (Array.isArray(strategy.paths)) {
+  else if (isArray(strategy.paths)) {
     const storageVal = strategy.paths.reduce((obj, key) => {
       obj[key] = store.$state[key]
       return obj
     }, {} as State)
-    storageVal
-      && windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
+    if (storageVal)
+      windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
   }
   else {
     const storageVal = store.$state
-    storageVal
-      && windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
+    if (storageVal)
+      windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
   }
 }
 
@@ -95,37 +111,42 @@ export const piniaPluginStorage = ({ options, store }: PiniaPluginContext) => {
   initStroage()
   if (Object.keys(options).includes('storage')) {
     const {
-      enabled = true,
-      storage = sessionStorage,
-      strategies = [{ enabled: true, key: store.$id, storage: sessionStorage }],
+      enabled = false,
+      storage = localStorage,
+      strategies = [{ key: store.$id, storage: localStorage }],
     } = options.storage || {}
+
     if (enabled) {
       strategies.forEach((strategy) => {
         const windowStorage = strategy.storage || storage
         const storageKey = strategy.key || store.$id
         const storageVal = windowStorage.getItem(storageKey)
-        if (storageVal) {
-          // 存储更新状态
-          updateStore(strategy, store, storageVal)
-        }
-        else {
-          // 状态更新存储
-          updateStorage(strategy, store, storage)
-        }
-        const callback = (event: StorageEvent) => {
-          const { updata, newValue } = event
-          if (!updata && newValue) updateStore(strategy, store, newValue)
-        }
-        // 监听 setItem 更新状态
-        stroageEventListener('setItem', callback)
-        // 监听 setItem 更新状态
-        stroageEventListener('storage', callback)
+        // 存储更新状态
+        if (storageVal) updateStore(strategy, store, storageVal)
+        // 状态更新存储
+        else updateStorage(strategy, store, storage)
       })
+
+      const callback = (event: StorageEvent) => {
+        const { update, newValue, key, eventKey } = event
+        if (!update) {
+          const strategy = strategies.find((strategy) => strategy.key === key)
+          if (strategy)
+            updateStore(strategy, store, newValue, eventKey === 'removeItem')
+        }
+      }
+      // 监听 setItem 更新状态
+      stroageEventListener('setItem', callback)
+      // 监听 setItem 更新状态
+      stroageEventListener('storage', callback)
+      // 监听 removeItem 更新状态
+      stroageEventListener('removeItem', callback)
+
+      // 监听状态更新存储
       store.$subscribe(() => {
-        strategies.forEach((strategy) => {
-          // 监听状态更新存储
-          updateStorage(strategy, store, storage)
-        })
+        strategies.forEach((strategy) =>
+          updateStorage(strategy, store, storage),
+        )
       })
     }
   }
