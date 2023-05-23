@@ -1,6 +1,6 @@
 {
   "name": "pinia-plugin-storage",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Pinia 持久化存储插件",
   "keywords": [
     "pinia",
