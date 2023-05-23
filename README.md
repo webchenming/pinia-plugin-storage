@@ -66,6 +66,7 @@ localStorage.setItem("TOKEN", 2)
 | `setItem` | 设置状态 | >= 0.0.5 |
 | `getItem` | 获取状态 | >= 0.0.5 |
 | `removeItem` | 移除状态 | >= 0.0.5 |
+| `clear` | 清除状态 | >= 0.0.6 |
 
 ```ts
 import { setItem, getItem } from 'pinia-plugin-storage'
@@ -81,5 +82,6 @@ console.log(userInfo)
 type setItem = <T>(key: string, value: T, storage = localStorage): void
 type getItem = <R>(key: string, storage = localStorage): R
 type removeItem = (key: string, storage = localStorage): void
+type clear = (): void
 ```
 

@@ -1,9 +1,12 @@
+import { isObject, keys, omit } from 'lodash-es'
+
 declare let localStorage: CustomStorage
 declare let sessionStorage: CustomStorage
 
 type EventKey = keyof EventMap
 type Listener = (event: EventMap[EventKey]) => void
 interface EventMap {
+  clear: StorageEvent
   setItem: StorageEvent
   getItem: StorageEvent
   removeItem: StorageEvent
@@ -16,39 +19,27 @@ export interface CustomStorage extends Storage {
 
 export interface StorageEvent extends Event {
   key?: string
-  newValue?: string | null
-  oldValue?: string | null
+  newValue?: any
+  oldValue?: any
   storage?: Storage
   update?: boolean
-  eventKey?: EventKey
-}
-
-const isJson = (str: string) => {
-  try {
-    JSON.parse(str)
-  }
-  catch (e) {
-    return false
-  }
-  return true
 }
 
 const initSetItem = (storage: CustomStorage) => {
-  storage.setItem = function (key: string, value: string, update?: boolean) {
-    if (isJson(value)) {
-      Reflect.set(storage, key, value, storage)
-      const event = new Event('setItem') as StorageEvent
-      event.key = key
-      event.newValue = value
-      event.oldValue = null
-      event.update = update
-      event.storage = storage
-      event.eventKey = 'setItem'
-      dispatchEvent(event)
+  storage.setItem = function <T>(key: string, value: T, update?: boolean) {
+    if (isObject(value)) {
+      return console.error(
+        `请通过 JSON.stringify 方法将 ${JSON.stringify(value)} 进行转换。`,
+      )
     }
-    else {
-      throw new TypeError(`${JSON.stringify(value)} is not valid JSON`)
-    }
+    Reflect.set(storage, key, value, storage)
+    const event = new Event('setItem') as StorageEvent
+    event.key = key
+    event.newValue = value
+    event.oldValue = null
+    event.update = update
+    event.storage = storage
+    dispatchEvent(event)
   }
 }
 
@@ -60,7 +51,6 @@ const initGetItem = (storage: CustomStorage) => {
     event.newValue = value
     event.oldValue = null
     event.storage = storage
-    event.eventKey = 'getItem'
     dispatchEvent(event)
     return value
   }
@@ -76,9 +66,28 @@ const initRemoveItem = (storage: CustomStorage) => {
       event.newValue = undefined
       event.oldValue = value
       event.storage = storage
-      event.eventKey = 'removeItem'
       dispatchEvent(event)
     }
+  }
+}
+
+const initClear = (storage: CustomStorage) => {
+  storage.clear = function () {
+    const storageKeys = keys(
+      omit(storage, [
+        'clear',
+        'setItem',
+        'getItem',
+        'removeItem',
+        'length',
+        'key',
+      ]),
+    )
+    storageKeys.forEach((storageKey) =>
+      Reflect.deleteProperty(storage, storageKey),
+    )
+    const event = new Event('clear') as StorageEvent
+    dispatchEvent(event)
   }
 }
 
@@ -87,6 +96,7 @@ export const initStroage = () => {
     initSetItem(storage)
     initGetItem(storage)
     initRemoveItem(storage)
+    initClear(storage)
   })
 }
 
@@ -94,14 +104,13 @@ export const stroageEventListener = (type: EventKey, listener: Listener) => {
   window.addEventListener(type, listener)
 }
 
-export const getItem = <R>(key: string, storage = localStorage) => {
-  return JSON.parse(storage.getItem(key) || '{}') as R
-}
+export const getItem = <R>(key: string, storage = localStorage) =>
+  JSON.parse(storage.getItem(key) || '{}') as R
 
-export const setItem = <T>(key: string, value: T, storage = localStorage) => {
+export const setItem = <T>(key: string, value: T, storage = localStorage) =>
   storage.setItem(key, JSON.stringify(value))
-}
 
-export const removeItem = (key: string, storage = localStorage) => {
+export const removeItem = (key: string, storage = localStorage) =>
   storage.removeItem(key)
-}
+
+export const clear = (storage = localStorage) => storage.clear()

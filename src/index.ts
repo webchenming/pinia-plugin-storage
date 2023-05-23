@@ -1,5 +1,5 @@
 import type { PiniaPluginContext } from 'pinia'
-import { has, isArray, isString } from 'lodash-es'
+import { has, isArray, isEmpty, isString } from 'lodash-es'
 import { initStroage, stroageEventListener } from './utils'
 import type { CustomStorage, StorageEvent } from './utils'
 
@@ -39,6 +39,25 @@ declare module 'pinia' {
 }
 
 /**
+ * 清除全部状态
+ */
+export const clearAllState = (store: Store) => {
+  const stateKeys = Object.keys(store.$state)
+  stateKeys.forEach((stateKey) => (store.$state[stateKey] = undefined))
+}
+
+/**
+ * 清除单个状态
+ */
+export const clearSingleState = (
+  store: Store,
+  path: string,
+  value: string | null | undefined,
+) => {
+  store[path] = value ? JSON.parse(value) : value
+}
+
+/**
  * 更新状态
  * @param strategy 更新策略
  * @param store pinia 状态
@@ -48,25 +67,10 @@ export const updateStore = (
   strategy: PiniaStrategy,
   store: Store,
   value: string | null | undefined,
-  remove = false,
 ) => {
-  if (isString(strategy.paths)) {
+  if (isString(strategy.paths))
     store[strategy.paths] = value ? JSON.parse(value) : value
-  }
-  else if (remove) {
-    if (isArray(strategy.paths)) {
-      strategy.paths.forEach(
-        (path) => (store[path] = value ? JSON.parse(value) : value),
-      )
-    }
-    else if (!has(strategy, 'paths')) {
-      const stateKeys = Object.keys(store.$state)
-      stateKeys.forEach((stateKey) => (store.$state[stateKey] = undefined))
-    }
-  }
-  else {
-    store.$patch(value ? JSON.parse(value) : value)
-  }
+  else store.$patch(value ? JSON.parse(value) : value)
 }
 
 /**
@@ -109,7 +113,7 @@ export const updateStorage = (
  */
 export const piniaPluginStorage = ({ options, store }: PiniaPluginContext) => {
   initStroage()
-  if (Object.keys(options).includes('storage')) {
+  if (has(options, 'storage')) {
     const {
       enabled = false,
       storage = localStorage,
@@ -128,20 +132,35 @@ export const piniaPluginStorage = ({ options, store }: PiniaPluginContext) => {
       })
 
       const callback = (event: StorageEvent) => {
-        const { update, newValue, key, eventKey } = event
-        if (!update) {
-          const strategy = strategies.find((strategy) => strategy.key === key)
-          if (strategy)
-            updateStore(strategy, store, newValue, eventKey === 'removeItem')
+        const { update, newValue, key, type } = event
+        // 全部清除
+        if (isEmpty(key)) return clearAllState(store)
+        const strategy = strategies.find((strategy) => strategy.key === key)
+        if (!update && strategy) {
+          const isRemove = ['removeItem'].includes(type)
+          if (isRemove) {
+            // 移除单个
+            if (isArray(strategy.paths)) {
+              return strategy.paths.forEach((path) =>
+                clearSingleState(store, path, newValue),
+              )
+            }
+            // 全部清除
+            if (!has(strategy, 'paths')) clearAllState(store)
+          }
+          else {
+            updateStore(strategy, store, newValue)
+          }
         }
       }
+      // 监听 storage 更新状态
+      stroageEventListener('storage', callback)
       // 监听 setItem 更新状态
       stroageEventListener('setItem', callback)
-      // 监听 setItem 更新状态
-      stroageEventListener('storage', callback)
       // 监听 removeItem 更新状态
       stroageEventListener('removeItem', callback)
-
+      // 监听 clear 更新状态
+      stroageEventListener('clear', callback)
       // 监听状态更新存储
       store.$subscribe(() => {
         strategies.forEach((strategy) =>

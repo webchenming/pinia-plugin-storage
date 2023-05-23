@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, toRefs } from 'vue'
+import { toRefs } from 'vue'
 import { defineStore } from 'pinia'
-import { getItem, removeItem, setItem } from 'pinia-plugin-storage'
+import { clear, getItem, removeItem, setItem } from 'pinia-plugin-storage'
 
 interface User {
   id?: string
@@ -29,54 +29,67 @@ const useUserStore = defineStore({
 })
 const userStore = useUserStore()
 const { token } = toRefs(userStore)
-const count = ref(token.value || 0)
 const handleClick1 = () => {
-  setItem('TOKEN', ++count.value)
+  setItem('TOKEN', ++token.value)
 }
 const handleClick2 = () => {
   const user = getItem<User>('USER')
-  user.token = ++count.value
+  user.token = ++token.value || 0
   user.id = `token-${user.token}`
   setItem('USER', user)
 }
 const handleClick3 = () => {
-  count.value = 0
   removeItem('TOKEN')
   removeItem('USER')
 }
 
 interface Menu {
-  path?: string
-  name?: string
-  component?: string
+  menu: {
+    path?: string
+    name?: string
+    component?: string
+  }[]
 }
 const useMenuStore = defineStore({
   id: 'menu',
   state: (): Menu => ({
-    path: '/',
-    name: 'Index',
-    component: 'layout',
+    menu: [
+      // {
+      //   path: '/',
+      //   name: 'Index',
+      //   component: 'layout',
+      // },
+    ],
   }),
   storage: {
     enabled: true,
+    strategies: [
+      {
+        key: 'menu',
+        paths: 'menu',
+      },
+    ],
   },
 })
 const menuStore = useMenuStore()
 const handleClick4 = () => {
   const menu = getItem<Menu>('menu')
-  menu.path = '/home'
-  menu.name = 'Home'
-  menu.component = '/views/home'
+  // menu.path = '/home'
+  // menu.name = 'Home'
+  // menu.component = '/views/home'
   setItem('menu', menu)
 }
 const handleClick5 = () => {
   removeItem('menu')
 }
+
+const handleClick6 = () => {
+  clear()
+}
 </script>
 
 <template>
   <div>
-    <pre>count: {{ count }}</pre>
     <pre>token: {{ token }}</pre>
     <pre>{{ userStore.$state }}</pre>
     <button @click="handleClick1">
@@ -96,6 +109,12 @@ const handleClick5 = () => {
     </button>
     <button @click="handleClick5">
       清除存储与状态
+    </button>
+  </div>
+  <br>
+  <div>
+    <button @click="handleClick6">
+      清除全部
     </button>
   </div>
 </template>
