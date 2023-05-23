@@ -1,5 +1,3 @@
-import { isJson } from './index'
-
 declare let localStorage: CustomStorage
 declare let sessionStorage: CustomStorage
 
@@ -23,6 +21,16 @@ export interface StorageEvent extends Event {
   storage?: Storage
   update?: boolean
   eventKey?: EventKey
+}
+
+const isJson = (str: string) => {
+  try {
+    JSON.parse(str)
+  }
+  catch (e) {
+    return false
+  }
+  return true
 }
 
 const initSetItem = (storage: CustomStorage) => {

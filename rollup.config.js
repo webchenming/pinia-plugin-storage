@@ -27,7 +27,8 @@ export default defineConfig({
       exports: 'named',
       name: 'PiniaPluginStorage',
       globals: {
-        pinia: 'Pinia',
+        'pinia': 'Pinia',
+        'lodash-es': 'LodashEs',
       },
     },
   ],

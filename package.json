@@ -38,7 +38,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "dev": "pnpm -C play dev",
-    "build": "rollup -cw",
+    "build": "rollup -c",
+    "build:dev": "rollup -cw",
     "release": "bumpp && pnpm publish"
   },
   "devDependencies": {
