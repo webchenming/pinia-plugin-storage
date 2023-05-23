@@ -132,3 +132,5 @@ export const piniaPluginStorage = ({ options, store }: PiniaPluginContext) => {
 }
 
 export { piniaPluginStorage as default }
+
+export * from './utils'

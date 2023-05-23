@@ -81,3 +81,11 @@ interface EventMap {
 export const stroageEventListener = (type: Key, listener: Listener) => {
   window.addEventListener(type, listener)
 }
+
+export const getItem = <R>(key: string, storage = localStorage) => {
+  return JSON.parse(storage.getItem(key) || '{}') as R
+}
+
+export const setItem = <T>(key: string, value: T, storage = localStorage) => {
+  storage.setItem(key, JSON.stringify(value))
+}

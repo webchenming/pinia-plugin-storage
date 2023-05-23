@@ -2,21 +2,22 @@
 import { toRefs } from 'vue'
 import { defineStore } from 'pinia'
 
-const useUserStore = defineStore('user', {
+const useUserStore = defineStore({
+  id: 'user',
   state: () => ({
     token: undefined,
-    userInfo: { name: 'xxx' },
+    userInfo: undefined,
   }),
   storage: {
+    storage: localStorage,
     strategies: [
       {
         key: '__TOKEN__',
         paths: 'token',
-        storage: localStorage,
       },
       {
         key: '__USER_INFO__',
-        paths: ['token', 'userInfo'],
+        paths: 'userInfo',
       },
     ],
   },
