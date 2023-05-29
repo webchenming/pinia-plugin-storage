@@ -14,7 +14,11 @@ interface EventMap {
 }
 
 export interface CustomStorage extends Storage {
-  setItem(key: string, value: string, update?: boolean): void
+  setItem<K extends string, V extends string>(
+    key: K,
+    value: V,
+    noRefresh?: boolean
+  ): void
 }
 
 export interface StorageEvent extends Event {
@@ -22,22 +26,23 @@ export interface StorageEvent extends Event {
   newValue?: any
   oldValue?: any
   storage?: Storage
-  update?: boolean
+  noRefresh?: boolean
 }
 
 const initSetItem = (storage: CustomStorage) => {
-  storage.setItem = function <T>(key: string, value: T, update?: boolean) {
+  storage.setItem = function <V>(key: string, value: V, noRefresh?: boolean) {
     if (isObject(value)) {
       return console.error(
         `请通过 JSON.stringify 方法将 ${JSON.stringify(value)} 进行转换。`,
       )
     }
+    const oldValue = Reflect.get(storage, key, storage)
     Reflect.set(storage, key, value, storage)
     const event = new Event('setItem') as StorageEvent
     event.key = key
     event.newValue = value
-    event.oldValue = null
-    event.update = update
+    event.oldValue = oldValue
+    event.noRefresh = noRefresh
     event.storage = storage
     dispatchEvent(event)
   }
@@ -104,13 +109,22 @@ export const stroageEventListener = (type: EventKey, listener: Listener) => {
   window.addEventListener(type, listener)
 }
 
-export const getItem = <R>(key: string, storage = localStorage) =>
-  JSON.parse(storage.getItem(key) || '{}') as R
+export const getItem = <R>(key: string, storage = localStorage) => {
+  return JSON.parse(storage.getItem(key) || '{}') as R
+}
 
-export const setItem = <T>(key: string, value: T, storage = localStorage) =>
-  storage.setItem(key, JSON.stringify(value))
+export const setItem = <K extends string, V>(
+  key: K,
+  value: V,
+  storage = localStorage,
+) => {
+  storage.setItem(key, JSON.stringify(value), false)
+}
 
-export const removeItem = (key: string, storage = localStorage) =>
+export const removeItem = (key: string, storage = localStorage) => {
   storage.removeItem(key)
+}
 
-export const clear = (storage = localStorage) => storage.clear()
+export const clear = (storage = localStorage) => {
+  storage.clear()
+}

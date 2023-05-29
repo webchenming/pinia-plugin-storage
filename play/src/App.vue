@@ -30,11 +30,12 @@ const useUserStore = defineStore({
 const userStore = useUserStore()
 const { token } = toRefs(userStore)
 const handleClick1 = () => {
-  setItem('TOKEN', ++token.value)
+  token.value = token.value ? token.value + 1 : 1
+  setItem('TOKEN', token.value)
 }
 const handleClick2 = () => {
   const user = getItem<User>('USER')
-  user.token = ++token.value || 0
+  user.token = token.value ? token.value + 1 : 1
   user.id = `token-${user.token}`
   setItem('USER', user)
 }
@@ -49,35 +50,36 @@ interface Menu {
     name?: string
     component?: string
   }[]
+  count?: number
 }
 const useMenuStore = defineStore({
   id: 'menu',
   state: (): Menu => ({
     menu: [
-      // {
-      //   path: '/',
-      //   name: 'Index',
-      //   component: 'layout',
-      // },
+      {
+        path: '/home',
+        name: 'Home',
+        component: '/views/home',
+      },
     ],
+    count: 1,
   }),
   storage: {
     enabled: true,
-    strategies: [
-      {
-        key: 'menu',
-        paths: 'menu',
-      },
-    ],
+    globalKey: 'Menu',
   },
 })
 const menuStore = useMenuStore()
 const handleClick4 = () => {
-  const menu = getItem<Menu>('menu')
-  // menu.path = '/home'
-  // menu.name = 'Home'
-  // menu.component = '/views/home'
-  setItem('menu', menu)
+  const res = getItem<Menu>('menu')
+  if (!res.menu?.length) res.menu = []
+  res.menu.push({
+    path: '/home',
+    name: 'Home',
+    component: '/views/home',
+  })
+  res.count = res.count ? res.count + 1 : 1
+  setItem('menu', res)
 }
 const handleClick5 = () => {
   removeItem('menu')
@@ -90,8 +92,12 @@ const handleClick6 = () => {
 
 <template>
   <div>
-    <pre>token: {{ token }}</pre>
-    <pre>{{ userStore.$state }}</pre>
+    <button @click="handleClick6">
+      清除全部
+    </button>
+  </div>
+  <br>
+  <div>
     <button @click="handleClick1">
       通过 setItem 更新 TOKEN 状态
     </button>
@@ -101,21 +107,17 @@ const handleClick6 = () => {
     <button @click="handleClick3">
       清除存储与状态
     </button>
+    <pre>token: {{ token }}</pre>
+    <pre>{{ userStore.$state }}</pre>
   </div>
   <div>
-    <pre>{{ menuStore.$state }}</pre>
     <button @click="handleClick4">
       通过 setItem 更新 menu 状态
     </button>
     <button @click="handleClick5">
       清除存储与状态
     </button>
-  </div>
-  <br>
-  <div>
-    <button @click="handleClick6">
-      清除全部
-    </button>
+    <pre>{{ menuStore.$state }}</pre>
   </div>
 </template>
 

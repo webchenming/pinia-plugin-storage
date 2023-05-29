@@ -1,5 +1,13 @@
 import type { PiniaPluginContext } from 'pinia'
-import { has, isArray, isEmpty, isString } from 'lodash-es'
+import {
+  forEach,
+  has,
+  isArray,
+  isEmpty,
+  isString,
+  isUndefined,
+  reduce,
+} from 'lodash-es'
 import { initStroage, stroageEventListener } from './utils'
 import type { CustomStorage, StorageEvent } from './utils'
 
@@ -14,9 +22,9 @@ type State = Store['$state']
  * @param paths 状态的key [String | String[]]
  */
 export interface PiniaStrategy {
-  key?: string
+  key: string
   storage?: CustomStorage
-  paths?: string | string[]
+  paths: null | string | string[]
 }
 
 /**
@@ -26,7 +34,8 @@ export interface PiniaStrategy {
  * @param strategies 存储策略 [PiniaStrategy[]]
  */
 export interface StorageOptions {
-  enabled?: boolean
+  enabled: boolean
+  globalKey?: string
   storage?: CustomStorage
   strategies?: PiniaStrategy[]
 }
@@ -43,7 +52,7 @@ declare module 'pinia' {
  */
 export const clearAllState = (store: Store) => {
   const stateKeys = Object.keys(store.$state)
-  stateKeys.forEach((stateKey) => (store.$state[stateKey] = undefined))
+  forEach(stateKeys, (stateKey) => (store.$state[stateKey] = undefined))
 }
 
 /**
@@ -83,28 +92,35 @@ export const updateStorage = (
   strategy: PiniaStrategy,
   store: Store,
   storage: CustomStorage,
+  globalKey?: string,
 ) => {
-  const windowStorage = strategy.storage || storage
-  const storeKey = strategy.key || store.$id
+  const storeKey = strategy.key || globalKey || store.$id
 
   if (isString(strategy.paths)) {
     const storageKey = strategy.paths
     const storageVal = store.$state[storageKey]
-    if (![undefined].includes(storageVal))
-      windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
-  }
-  else if (isArray(strategy.paths)) {
-    const storageVal = strategy.paths.reduce((obj, key) => {
-      obj[key] = store.$state[key]
-      return obj
-    }, {} as State)
-    if (storageVal)
-      windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
+    if (!isUndefined(storageVal))
+      storage.setItem(storeKey, JSON.stringify(storageVal), true)
   }
   else {
-    const storageVal = store.$state
-    if (storageVal)
-      windowStorage.setItem(storeKey, JSON.stringify(storageVal), true)
+    let storageVal
+    if (isArray(strategy.paths)) {
+      storageVal = reduce(
+        strategy.paths,
+        (res, key) => {
+          res[key] = store.$state[key]
+          return res
+        },
+        {} as State,
+      )
+    }
+    else {
+      storageVal = store.$state
+    }
+    // 除去 undefined
+    storageVal = storageVal ? JSON.parse(JSON.stringify(storageVal)) : {}
+    if (!isEmpty(storageVal))
+      storage.setItem(storeKey, JSON.stringify(storageVal), true)
   }
 }
 
@@ -114,58 +130,76 @@ export const updateStorage = (
 export const piniaPluginStorage = ({ options, store }: PiniaPluginContext) => {
   initStroage()
   if (has(options, 'storage')) {
-    const {
+    let {
+      globalKey,
       enabled = false,
       storage = localStorage,
-      strategies = [{ key: store.$id, storage: localStorage }],
+      strategies = [],
     } = options.storage || {}
-
+    if (!strategies.length) {
+      strategies = [
+        {
+          key: globalKey || store.$id,
+          storage: localStorage,
+          paths: null,
+        },
+      ]
+    }
     if (enabled) {
-      strategies.forEach((strategy) => {
+      // 初始化状态与存储
+      forEach(strategies, (strategy) => {
         const windowStorage = strategy.storage || storage
         const storageKey = strategy.key || store.$id
         const storageVal = windowStorage.getItem(storageKey)
         // 存储更新状态
         if (storageVal) updateStore(strategy, store, storageVal)
         // 状态更新存储
-        else updateStorage(strategy, store, storage)
+        else updateStorage(strategy, store, windowStorage, globalKey)
       })
 
-      const callback = (event: StorageEvent) => {
-        const { update, newValue, key, type } = event
-        // 全部清除
-        if (isEmpty(key)) return clearAllState(store)
+      // 监听 storage 更新状态
+      stroageEventListener('storage', () => {
+        clearAllState(store)
+      })
+
+      // 监听 setItem 更新状态
+      stroageEventListener('setItem', (event: StorageEvent) => {
+        const { noRefresh, newValue, key } = event
         const strategy = strategies.find((strategy) => strategy.key === key)
-        if (!update && strategy) {
-          const isRemove = ['removeItem'].includes(type)
-          if (isRemove) {
-            // 移除单个
-            if (isArray(strategy.paths)) {
-              return strategy.paths.forEach((path) =>
-                clearSingleState(store, path, newValue),
-              )
-            }
-            // 全部清除
-            if (!has(strategy, 'paths')) clearAllState(store)
+        if (!noRefresh && strategy) updateStore(strategy, store, newValue)
+      })
+
+      // 监听 removeItem 更新状态
+      stroageEventListener('removeItem', (event: StorageEvent) => {
+        const { newValue, key } = event
+        const strategy = strategies.find((strategy) => strategy.key === key)
+        if (strategy) {
+          if (isString(strategy.paths)) {
+            const { paths } = strategy
+            clearSingleState(store, paths, newValue)
+          }
+          else if (isArray(strategy.paths)) {
+            forEach(strategy.paths, (path) => {
+              clearSingleState(store, path, newValue)
+            })
           }
           else {
-            updateStore(strategy, store, newValue)
+            clearAllState(store)
           }
         }
-      }
-      // 监听 storage 更新状态
-      stroageEventListener('storage', callback)
-      // 监听 setItem 更新状态
-      stroageEventListener('setItem', callback)
-      // 监听 removeItem 更新状态
-      stroageEventListener('removeItem', callback)
+      })
+
       // 监听 clear 更新状态
-      stroageEventListener('clear', callback)
+      stroageEventListener('clear', () => {
+        clearAllState(store)
+      })
+
       // 监听状态更新存储
       store.$subscribe(() => {
-        strategies.forEach((strategy) =>
-          updateStorage(strategy, store, storage),
-        )
+        forEach(strategies, (strategy) => {
+          const windowStorage = strategy.storage || storage
+          updateStorage(strategy, store, windowStorage, globalKey)
+        })
       })
     }
   }
