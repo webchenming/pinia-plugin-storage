@@ -138,14 +138,14 @@ export const piniaPluginStorage = ({ options, store }: PiniaPluginContext) => {
     let {
       globalKey,
       enabled = false,
-      storage = localStorage,
-      strategies = [],
+      storage = localStorage as CustomStorage,
+      strategies,
     } = options.storage || {}
-    if (!strategies.length) {
+    if (!strategies?.length) {
       strategies = [
         {
           key: globalKey || store.$id,
-          storage: localStorage,
+          storage: localStorage as CustomStorage,
           paths: null,
         },
       ]
@@ -170,14 +170,14 @@ export const piniaPluginStorage = ({ options, store }: PiniaPluginContext) => {
       // 监听 setItem 更新状态
       stroageEventListener('setItem', (event: StorageEvent) => {
         const { noRefresh, newValue, key } = event
-        const strategy = strategies.find((strategy) => strategy.key === key)
+        const strategy = strategies?.find((strategy) => strategy.key === key)
         if (!noRefresh && strategy) updateStore(strategy, store, newValue)
       })
 
       // 监听 removeItem 更新状态
       stroageEventListener('removeItem', (event: StorageEvent) => {
         const { newValue, key } = event
-        const strategy = strategies.find((strategy) => strategy.key === key)
+        const strategy = strategies?.find((strategy) => strategy.key === key)
         if (strategy) {
           if (isString(strategy.paths)) {
             const { paths } = strategy

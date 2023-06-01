@@ -14,12 +14,14 @@ interface EventMap {
   storage: StorageEvent
 }
 
-export interface CustomStorage extends Storage {
-  setItem<K extends string, V extends string>(
-    key: K,
-    value: V,
-    noRefresh?: boolean
-  ): void
+export interface CustomStorage {
+  readonly length: number
+  setItem<K extends string, V>(key: K, value: V, noRefresh?: boolean): void
+  clear(): void
+  getItem(key: string): string | null
+  key(index: number): string | null
+  removeItem(key: string): void
+  [name: string]: any
 }
 
 export interface StorageEvent extends Event {
@@ -79,16 +81,15 @@ const initRemoveItem = (storage: CustomStorage) => {
 
 const initClear = (storage: CustomStorage) => {
   storage.clear = function () {
-    const storageKeys = keys(
-      omit(storage, [
-        'clear',
-        'setItem',
-        'getItem',
-        'removeItem',
-        'length',
-        'key',
-      ]),
-    )
+    const filter = omit(storage, [
+      'clear',
+      'setItem',
+      'getItem',
+      'removeItem',
+      'length',
+      'key',
+    ])
+    const storageKeys = keys(filter)
     storageKeys.forEach((storageKey) =>
       Reflect.deleteProperty(storage, storageKey),
     )
@@ -116,11 +117,7 @@ export const getItem = <V>(key: string, storage = localStorage) => {
   else return JSONParse(value) as V
 }
 
-export const setItem = <K extends string, V>(
-  key: K,
-  value: V,
-  storage = localStorage,
-) => {
+export const setItem = <V>(key: string, value: V, storage = localStorage) => {
   storage.setItem(key, JSONStringify(value), false)
 }
 

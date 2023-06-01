@@ -71,6 +71,8 @@ localStorage.setItem("TOKEN", 2)
 | `getItem` | 获取状态 | >= 0.0.6 |
 | `removeItem` | 移除状态 | >= 0.0.6 |
 | `clear` | 清除状态 | >= 0.0.6 |
+| `JSONParse` | JSON反序列化，支持 function 和 symbol | >= 0.0.8 |
+| `JSONStringify` | JSON序列化，支持 function 和 symbol | >= 0.0.8 |
 
 ```ts
 import { setItem, getItem } from 'pinia-plugin-storage'
@@ -84,8 +86,10 @@ console.log(userInfo)
 
 ```ts
 type setItem = <T>(key: string, value: T, storage = localStorage): void
-type getItem = <R>(key: string, storage = localStorage): R
+type getItem = <V>(key: string, storage = localStorage): V | null
 type removeItem = (key: string, storage = localStorage): void
 type clear = (): void
+type JSONParse = (data: string): any
+type JSONStringify = <T>(data: T): void
 ```
 

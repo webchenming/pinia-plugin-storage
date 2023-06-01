@@ -1,5 +1,5 @@
 /**
- * * JSON序列化，支持函数和 undefined
+ * * JSON序列化，支持 function 和 symbol
  * @param data
  */
 export const JSONStringify = <T>(data: T) => {
@@ -17,7 +17,7 @@ export const JSONStringify = <T>(data: T) => {
 }
 
 /**
- * * JSON反序列化，支持函数和 undefined
+ * * JSON反序列化，支持 function 和 symbol
  * @param data
  */
 export const JSONParse = (data: string) => {
