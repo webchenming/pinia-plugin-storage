@@ -1,3 +1,6 @@
 {
-  "extends": "@webchen"
+  "extends": "@webchen",
+  "rules": {
+    "no-eval": "off"
+  }
 }

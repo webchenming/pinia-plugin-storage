@@ -1,123 +1,89 @@
 <script setup lang="ts">
-import { toRefs } from 'vue'
 import { defineStore } from 'pinia'
 import { clear, getItem, removeItem, setItem } from 'pinia-plugin-storage'
 
-interface User {
-  id?: string
-  token?: number
+interface State {
+  num: number
+  str: string
+  obj: object
+  arr: any[]
+  _null: null
+  _undefined: undefined
+  fn: Function
+  syb: Symbol
 }
 const useUserStore = defineStore({
-  id: 'user',
-  state: (): User => ({
-    id: undefined,
-    token: undefined,
+  id: 'type',
+  state: (): State => ({
+    num: 0,
+    str: '',
+    obj: {},
+    arr: [],
+    _null: null,
+    _undefined: undefined,
+    fn: () => {},
+    syb: Symbol(0),
   }),
   storage: {
     enabled: true,
     strategies: [
+      { key: 'num', paths: 'num' },
+      { key: 'str', paths: 'str' },
+      { key: 'obj', paths: 'obj' },
+      { key: 'null', paths: '_null' },
+      { key: 'undefined', paths: '_undefined' },
+      { key: 'fn', paths: 'fn' },
+      { key: 'syb', paths: 'syb' },
       {
-        key: 'TOKEN',
-        paths: 'token',
-      },
-      {
-        key: 'USER',
-        paths: ['token', 'id'],
+        key: 'all',
+        paths: ['num', 'str', 'obj', '_null', '_undefined', 'fn', 'syb'],
       },
     ],
   },
 })
 const userStore = useUserStore()
-const { token } = toRefs(userStore)
-const handleClick1 = () => {
-  token.value = token.value ? token.value + 1 : 1
-  setItem('TOKEN', token.value)
-}
-const handleClick2 = () => {
-  const user = getItem<User>('USER')
-  user.token = token.value ? token.value + 1 : 1
-  user.id = `token-${user.token}`
-  setItem('USER', user)
-}
-const handleClick3 = () => {
-  removeItem('TOKEN')
-  removeItem('USER')
+const handleClick = () => {
+  let num = getItem<number>('num')
+  setItem('num', ++num)
 }
 
-interface Menu {
-  menu: {
-    path?: string
-    name?: string
-    component?: string
-  }[]
-  count?: number
-}
-const useMenuStore = defineStore({
-  id: 'menu',
-  state: (): Menu => ({
-    menu: [
-      {
-        path: '/home',
-        name: 'Home',
-        component: '/views/home',
-      },
-    ],
-    count: 1,
-  }),
-  storage: {
-    enabled: true,
-    globalKey: 'Menu',
-  },
-})
-const menuStore = useMenuStore()
-const handleClick4 = () => {
-  const res = getItem<Menu>('menu')
-  if (!res.menu?.length) res.menu = []
-  res.menu.push({
-    path: '/home',
-    name: 'Home',
-    component: '/views/home',
-  })
-  res.count = res.count ? res.count + 1 : 1
-  setItem('menu', res)
-}
-const handleClick5 = () => {
-  removeItem('menu')
+const handleReload = () => {
+  location.reload()
 }
 
-const handleClick6 = () => {
+const handleRemove = () => {
+  removeItem('num')
+  handleReload()
+}
+
+const handleClear = () => {
   clear()
+  handleReload()
 }
 </script>
 
 <template>
   <div>
-    <button @click="handleClick6">
+    <button @click="handleClick">
+      更新状态
+    </button>
+    <button @click="handleRemove">
+      清除存储与状态
+    </button>
+    <button @click="handleClear">
       清除全部
     </button>
-  </div>
-  <br>
-  <div>
-    <button @click="handleClick1">
-      通过 setItem 更新 TOKEN 状态
+    <button @click="handleReload">
+      刷新页面
     </button>
-    <button @click="handleClick2">
-      通过 setItem 更新 USER 状态
-    </button>
-    <button @click="handleClick3">
-      清除存储与状态
-    </button>
-    <pre>token: {{ token }}</pre>
+    <pre>num: {{ getItem("num") }}</pre>
+    <pre>str: {{ getItem("str") }}</pre>
+    <pre>obj: {{ getItem("obj") }}</pre>
+    <pre>_null: {{ getItem("null") }}</pre>
+    <pre>_undefined: {{ getItem("_undefined") }}</pre>
+    <pre>fn: {{ getItem("fn") }}</pre>
+    <pre>syb: {{ getItem("syb") }}</pre>
     <pre>{{ userStore.$state }}</pre>
-  </div>
-  <div>
-    <button @click="handleClick4">
-      通过 setItem 更新 menu 状态
-    </button>
-    <button @click="handleClick5">
-      清除存储与状态
-    </button>
-    <pre>{{ menuStore.$state }}</pre>
   </div>
 </template>
 

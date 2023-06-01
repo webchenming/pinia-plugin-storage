@@ -8,7 +8,12 @@ import {
   isUndefined,
   reduce,
 } from 'lodash-es'
-import { initStroage, stroageEventListener } from './utils'
+import {
+  JSONParse,
+  JSONStringify,
+  initStroage,
+  stroageEventListener,
+} from './utils'
 import type { CustomStorage, StorageEvent } from './utils'
 
 type Store = PiniaPluginContext['store']
@@ -63,7 +68,7 @@ export const clearSingleState = (
   path: string,
   value: string | null | undefined,
 ) => {
-  store[path] = value ? JSON.parse(value) : value
+  store[path] = value ? JSONParse(value) : value
 }
 
 /**
@@ -78,8 +83,8 @@ export const updateStore = (
   value: string | null | undefined,
 ) => {
   if (isString(strategy.paths))
-    store[strategy.paths] = value ? JSON.parse(value) : value
-  else store.$patch(value ? JSON.parse(value) : value)
+    store[strategy.paths] = value ? JSONParse(value) : value
+  else store.$patch(value ? JSONParse(value) : value)
 }
 
 /**
@@ -100,7 +105,7 @@ export const updateStorage = (
     const storageKey = strategy.paths
     const storageVal = store.$state[storageKey]
     if (!isUndefined(storageVal))
-      storage.setItem(storeKey, JSON.stringify(storageVal), true)
+      storage.setItem(storeKey, JSONStringify(storageVal), true)
   }
   else {
     let storageVal
@@ -118,9 +123,9 @@ export const updateStorage = (
       storageVal = store.$state
     }
     // 除去 undefined
-    storageVal = storageVal ? JSON.parse(JSON.stringify(storageVal)) : {}
+    storageVal = storageVal ? JSONParse(JSONStringify(storageVal)) : {}
     if (!isEmpty(storageVal))
-      storage.setItem(storeKey, JSON.stringify(storageVal), true)
+      storage.setItem(storeKey, JSONStringify(storageVal), true)
   }
 }
 

@@ -1,4 +1,5 @@
-import { isObject, keys, omit } from 'lodash-es'
+import { isNull, isObject, isUndefined, keys, omit } from 'lodash-es'
+import { JSONParse, JSONStringify } from './utils'
 
 declare let localStorage: CustomStorage
 declare let sessionStorage: CustomStorage
@@ -33,7 +34,7 @@ const initSetItem = (storage: CustomStorage) => {
   storage.setItem = function <V>(key: string, value: V, noRefresh?: boolean) {
     if (isObject(value)) {
       return console.error(
-        `请通过 JSON.stringify 方法将 ${JSON.stringify(value)} 进行转换。`,
+        `请通过 JSON.stringify 方法将 ${JSONStringify(value)} 进行转换。`,
       )
     }
     const oldValue = Reflect.get(storage, key, storage)
@@ -109,8 +110,10 @@ export const stroageEventListener = (type: EventKey, listener: Listener) => {
   window.addEventListener(type, listener)
 }
 
-export const getItem = <R>(key: string, storage = localStorage) => {
-  return JSON.parse(storage.getItem(key) || '{}') as R
+export const getItem = <V>(key: string, storage = localStorage) => {
+  const value = storage.getItem(key)
+  if (isNull(value) || isUndefined(value)) return null
+  else return JSONParse(value) as V
 }
 
 export const setItem = <K extends string, V>(
@@ -118,7 +121,7 @@ export const setItem = <K extends string, V>(
   value: V,
   storage = localStorage,
 ) => {
-  storage.setItem(key, JSON.stringify(value), false)
+  storage.setItem(key, JSONStringify(value), false)
 }
 
 export const removeItem = (key: string, storage = localStorage) => {
