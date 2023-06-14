@@ -28,7 +28,7 @@ type State = Store['$state']
  */
 export interface PiniaStrategy {
   key: string
-  storage?: CustomStorage
+  storage?: Storage
   paths: null | string | string[]
 }
 
@@ -41,7 +41,7 @@ export interface PiniaStrategy {
 export interface StorageOptions {
   enabled: boolean
   globalKey?: string
-  storage?: CustomStorage
+  storage?: Storage
   strategies?: PiniaStrategy[]
 }
 
@@ -153,7 +153,7 @@ export const piniaPluginStorage = ({ options, store }: PiniaPluginContext) => {
     if (enabled) {
       // 初始化状态与存储
       forEach(strategies, (strategy) => {
-        const windowStorage = strategy.storage || storage
+        const windowStorage = (strategy.storage as CustomStorage) || storage
         const storageKey = strategy.key || store.$id
         const storageVal = windowStorage.getItem(storageKey)
         // 存储更新状态
@@ -202,7 +202,7 @@ export const piniaPluginStorage = ({ options, store }: PiniaPluginContext) => {
       // 监听状态更新存储
       store.$subscribe(() => {
         forEach(strategies, (strategy) => {
-          const windowStorage = strategy.storage || storage
+          const windowStorage = (strategy.storage as CustomStorage) || storage
           updateStorage(strategy, store, windowStorage, globalKey)
         })
       })

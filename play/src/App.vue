@@ -43,7 +43,7 @@ const useUserStore = defineStore({
 })
 const userStore = useUserStore()
 const handleClick = () => {
-  let num = getItem<number>('num')
+  let num = getItem<number>('num') || 0
   setItem('num', ++num)
 }
 
