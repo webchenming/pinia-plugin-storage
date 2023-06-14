@@ -26,19 +26,20 @@ const useUserStore = defineStore({
   }),
   storage: {
     enabled: true,
-    strategies: [
-      { key: 'num', paths: 'num' },
-      { key: 'str', paths: 'str' },
-      { key: 'obj', paths: 'obj' },
-      { key: 'null', paths: '_null' },
-      { key: 'undefined', paths: '_undefined' },
-      { key: 'fn', paths: 'fn' },
-      { key: 'syb', paths: 'syb' },
-      {
-        key: 'all',
-        paths: ['num', 'str', 'obj', '_null', '_undefined', 'fn', 'syb'],
-      },
-    ],
+    storage: sessionStorage,
+    // strategies: [
+    //   { key: 'num', paths: 'num' },
+    //   { key: 'str', paths: 'str' },
+    //   { key: 'obj', paths: 'obj' },
+    //   { key: 'null', paths: '_null' },
+    //   { key: 'undefined', paths: '_undefined' },
+    //   { key: 'fn', paths: 'fn' },
+    //   { key: 'syb', paths: 'syb' },
+    //   {
+    //     key: 'all',
+    //     paths: ['num', 'str', 'obj', '_null', '_undefined', 'fn', 'syb'],
+    //   },
+    // ],
   },
 })
 const userStore = useUserStore()

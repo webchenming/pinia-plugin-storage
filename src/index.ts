@@ -138,22 +138,15 @@ export const piniaPluginStorage = ({ options, store }: PiniaPluginContext) => {
     let {
       globalKey,
       enabled = false,
-      storage = localStorage as CustomStorage,
+      storage = localStorage,
       strategies,
     } = options.storage || {}
-    if (!strategies?.length) {
-      strategies = [
-        {
-          key: globalKey || store.$id,
-          storage: localStorage as CustomStorage,
-          paths: null,
-        },
-      ]
-    }
+    if (!strategies?.length)
+      strategies = [{ key: globalKey || store.$id, storage, paths: null }]
     if (enabled) {
       // 初始化状态与存储
       forEach(strategies, (strategy) => {
-        const windowStorage = (strategy.storage as CustomStorage) || storage
+        const windowStorage = (strategy.storage || storage) as CustomStorage
         const storageKey = strategy.key || store.$id
         const storageVal = windowStorage.getItem(storageKey)
         // 存储更新状态
@@ -202,7 +195,7 @@ export const piniaPluginStorage = ({ options, store }: PiniaPluginContext) => {
       // 监听状态更新存储
       store.$subscribe(() => {
         forEach(strategies, (strategy) => {
-          const windowStorage = (strategy.storage as CustomStorage) || storage
+          const windowStorage = (strategy.storage || storage) as CustomStorage
           updateStorage(strategy, store, windowStorage, globalKey)
         })
       })
