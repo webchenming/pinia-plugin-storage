@@ -13,7 +13,9 @@ const useStore = defineStore(
     return { count, doubleCount, increment }
   },
   {
-    storage: [],
+    storage: {
+      enabled: false,
+    },
   },
 )
 

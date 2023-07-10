@@ -56,7 +56,8 @@ export const clearSingleState = (
   path: string,
   value: string | null | undefined,
 ) => {
-  store[path] = value ? JSONParse(value) : value
+  const o = value ? JSONParse<any>(value) : value
+  store[path] = o
 }
 
 /**
@@ -70,9 +71,14 @@ export const updateStore = (
   store: Store,
   value: string | null | undefined,
 ) => {
-  if (isString(strategy.paths))
-    store[strategy.paths] = value ? JSONParse(value) : value
-  else store.$patch(value ? JSONParse(value) : value)
+  if (isString(strategy.paths)) {
+    const o = value ? JSONParse<any>(value) : value
+    store[strategy.paths] = o
+  }
+  else {
+    const o = value ? JSONParse<any>(value) : value
+    store.$patch(o)
+  }
 }
 
 /**
@@ -111,7 +117,7 @@ export const updateStorage = (
       storageVal = store.$state
     }
     // 除去 undefined
-    storageVal = storageVal ? JSONParse(JSONStringify(storageVal)) : {}
+    storageVal = storageVal ? JSONParse<any>(JSONStringify(storageVal)) : {}
     if (!isEmpty(storageVal))
       storage.setItem(storeKey, JSONStringify(storageVal), true)
   }
