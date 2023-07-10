@@ -20,7 +20,7 @@ export const JSONStringify = <T>(data: T) => {
  * * JSON反序列化，支持 function 和 symbol
  * @param data
  */
-export const JSONParse = (data: string) => {
+export const JSONParse = <V>(data: string) => {
   const _eval = eval
   return JSON.parse(data, (_, v) => {
     // 还原 function 值
@@ -39,5 +39,5 @@ export const JSONParse = (data: string) => {
       return _eval(v)
     }
     return v
-  })
+  }) as V
 }

@@ -77,19 +77,23 @@ localStorage.setItem("TOKEN", 2)
 ```ts
 import { setItem, getItem } from 'pinia-plugin-storage'
 
-setItem<{ name: string }>('USER-INFO', { name: 'yyy' })
-const userInfo = getItem<{ name: string }>('USER-INFO')
+interface User { name: string }
+
+setItem<User>('USER-INFO', { name: 'yyy' })
+const userInfo = getItem<User>('USER-INFO')
 console.log(userInfo)
 ```
 
 类型说明
 
 ```ts
-type setItem = <T>(key: string, value: T, storage = localStorage): void
-type getItem = <V>(key: string, storage = localStorage): V | null
-type removeItem = (key: string, storage = localStorage): void
-type clear = (): void
-type JSONParse = (data: string): any
-type JSONStringify = <T>(data: T): void
+clear(): void
+removeItem(key: string, storage: Storage): void
+
+getItem<V>(key: string, storage: Storage): V | null
+setItem<V>(key: string, value: V, storage: Storage): void
+
+JSONParse<V>(data: string): <V>
+JSONStringify<T>(data: T): void
 ```
 
