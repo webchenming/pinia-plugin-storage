@@ -111,20 +111,24 @@ export const stroageEventListener = (type: EventKey, listener: Listener) => {
   window.addEventListener(type, listener)
 }
 
-export const getItem = <V>(key: string, storage = localStorage) => {
+export const getItem = <V>(key: string, storage: Storage = localStorage) => {
   const value = storage.getItem(key)
   if (isNull(value) || isUndefined(value)) return null
   else return JSONParse(value) as V
 }
 
-export const setItem = <V>(key: string, value: V, storage = localStorage) => {
-  storage.setItem(key, JSONStringify(value), false)
+export const setItem = <V>(
+  key: string,
+  value: V,
+  storage: Storage = localStorage,
+) => {
+  (storage as CustomStorage).setItem(key, JSONStringify(value), false)
 }
 
-export const removeItem = (key: string, storage = localStorage) => {
+export const removeItem = (key: string, storage: Storage = localStorage) => {
   storage.removeItem(key)
 }
 
-export const clear = (storage = localStorage) => {
+export const clear = (storage: Storage = localStorage) => {
   storage.clear()
 }
