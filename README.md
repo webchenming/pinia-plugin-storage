@@ -93,7 +93,7 @@ removeItem(key: string, storage: Storage): void
 getItem<V>(key: string, storage: Storage): V | null
 setItem<V>(key: string, value: V, storage: Storage): void
 
-JSONParse<V>(data: string): <V>
+JSONParse<V>(data: string): V
 JSONStringify<T>(data: T): void
 ```
 
